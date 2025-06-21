@@ -281,32 +281,39 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
   }, [unitsMappings]);
 
   const dataSource = useMemo<IWeightDimensionItem[]>(() => {
-    const ret = [] as IWeightDimensionItem[];
     if (!formData) {
-      return ret;
-    }
-    const hasSalesUnit = !!formData?.['sales_unit_row-unitId'];
-    const hasMiniPack = !!formData?.['min_package_row-unitId'];
-    if (hasSalesUnit) {
-      const salesUnit = { rowType: 'sales_unit_row' } as IWeightDimensionItem;
-      Object.keys(formData).forEach((key) => {
-        if (key.includes('sales_unit_row')) {
-          salesUnit[key.split('-')[1]] = formData[key];
-        }
-      });
-      ret.push(salesUnit);
+      return [];
     }
 
-    if (hasMiniPack) {
-      const miniPack = { rowType: 'min_package_row' } as IWeightDimensionItem;
+    let salesData: Partial<IWeightDimensionItem> = null;
+    let miniPackData: Partial<IWeightDimensionItem> = null;
+
+    // 提取销售单位数据
+    if (formData['sales_unit_row-unitId']) {
+      salesData = { rowType: 'sales_unit_row' } as IWeightDimensionItem;
       Object.keys(formData).forEach((key) => {
-        if (key.includes('min_package_row')) {
-          miniPack[key.split('-')[1]] = formData[key];
+        if (key.startsWith('sales_unit_row-')) {
+          const field = key.split('-')[1];
+          salesData[field] = formData[key];
         }
       });
-      ret.push(miniPack);
     }
-    return ret;
+
+    // 提取最小包装单位数据
+    if (formData['min_package_row-unitId']) {
+      miniPackData = { rowType: 'min_package_row' } as IWeightDimensionItem;
+      Object.keys(formData).forEach((key) => {
+        if (key.startsWith('min_package_row-')) {
+          const field = key.split('-')[1];
+          miniPackData[field] = formData[key];
+        }
+      });
+    }
+
+    return [
+      ...(salesData ? [salesData as IWeightDimensionItem] : []),
+      ...(miniPackData ? [miniPackData as IWeightDimensionItem] : []),
+    ];
   }, [formData]);
   const getFieldRule = useCallback(
     (dataIndex: string, entity: any) => {
