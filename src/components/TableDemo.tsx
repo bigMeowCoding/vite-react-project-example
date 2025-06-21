@@ -36,13 +36,12 @@ const App: React.FC = () => {
       address: 'Sidney No. 1 Lake Park',
     },
   ])
-
   const columns = [
     {
       title: '姓名',
       dataIndex: 'name',
       key: 'name',
-      render: (_, record) => (
+      render: (_: any, record: DataItem) => (
         <Form.Item
           name={['user', record.key, 'name']}
           initialValue={record.name}
@@ -56,7 +55,7 @@ const App: React.FC = () => {
       title: '年龄',
       dataIndex: 'age',
       key: 'age',
-      render: (_, record) => (
+      render: (_: any, record: DataItem) => (
         <Form.Item
           name={['user', record.key, 'age']}
           initialValue={record.age}
@@ -70,7 +69,7 @@ const App: React.FC = () => {
       title: '性别',
       dataIndex: 'gender',
       key: 'gender',
-      render: (_, record) => (
+      render: (_: any, record: DataItem) => (
         <Form.Item
           name={['user', record.key, 'gender']}
           initialValue={record.gender}
@@ -87,7 +86,7 @@ const App: React.FC = () => {
       title: '地址',
       dataIndex: 'address',
       key: 'address',
-      render: (_, record) => (
+      render: (_: any, record: DataItem) => (
         <Form.Item
           name={['user', record.key, 'address']}
           initialValue={record.address}
@@ -100,7 +99,7 @@ const App: React.FC = () => {
     {
       title: '操作',
       key: 'action',
-      render: (_, record) => (
+      render: (_: any, record: DataItem) => (
         <Space size="middle">
           <Button type="link" danger onClick={() => handleDelete(record.key)}>
             删除
