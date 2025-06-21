@@ -283,7 +283,7 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
   }, [unitsMappings]);
 
   const dataSource = useMemo<IWeightDimensionItem[]>(() => {
-    let ret = [] as IWeightDimensionItem[];
+    const ret = [] as IWeightDimensionItem[];
     if (!formData) {
       return ret;
     }
@@ -325,7 +325,7 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
       columnConfig.dimensionUnitIdDataIndex,
       columnConfig.volumeUnitIdDataIndex,
     ];
-    return (value: string, entity: any) => {
+    const renderFunction = (value: string, entity: any) => {
       if (!inputDataIndexList.includes(dataIndex)) {
         if (unitIdDataIndexList.includes(dataIndex)) {
           const disabled = [
@@ -452,6 +452,7 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
         </Form.Item>
       );
     };
+    return renderFunction;
   };
 
   useEffect(() => {
