@@ -1,0 +1,14 @@
+// 样式文件（如 customTable.less）
+.custom-unit-list-table {
+  overflow-x: auto; // 直接在表格容器上启用横向滚动
+  // 可选：限制表格自身高度（避免纵向滚动）
+  max-width: 1012px;
+
+  // 表格内层容器样式（Ant Design 表格的原生滚动容器）
+  .ant-table-wrapper {
+    min-width: 100%; // 确保内容撑开宽度
+  }
+  .ant-form-item-margin-offset {
+    display: none;
+  }
+}

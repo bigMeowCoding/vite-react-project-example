@@ -1,12 +1,12 @@
-import React from 'react'
-import TableDemo from './components/TableDemo'
+import React from 'react';
+import UnitListDemo from './UnitListDemo';
 
 const App: React.FC = () => {
   return (
     <div className="App">
-      <TableDemo />
+      <UnitListDemo />
     </div>
-  )
-}
+  );
+};
 
-export default App
+export default App;
