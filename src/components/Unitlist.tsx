@@ -131,24 +131,19 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
   const materielUnitList = useMemo(() => {
     return Array.isArray(props.materielUnitList) ? props.materielUnitList : [];
   }, [props.materielUnitList]);
-  // 重量默认单位kg
-  const weightDefaultUni = useMemo(() => {
-    return materielUnitList.find((item) => {
-      return item.name === '千克';
-    });
+  const getDefaultUnits = useCallback(() => {
+    return {
+      weight: materielUnitList.find((item) => item.name === '千克'),
+      dimension: materielUnitList.find((item) => item.name === '毫米'),
+      volume: materielUnitList.find((item) => item.name === 'cm³'),
+    };
   }, [materielUnitList]);
-  // 体积默认单位立方厘米
-  const volumeDefaultUni = useMemo(() => {
-    return materielUnitList.find((item) => {
-      return item.name === 'cm³';
-    });
-  }, [materielUnitList]);
-  // 尺寸默认单位毫米
-  const dimensionDefaultUni = useMemo(() => {
-    return materielUnitList.find((item) => {
-      return item.name === '毫米';
-    });
-  }, [materielUnitList]);
+
+  const {
+    weight: weightDefaultUni,
+    dimension: dimensionDefaultUni,
+    volume: volumeDefaultUni,
+  } = getDefaultUnits();
 
   const hasSalesUnit = useMemo(() => {
     return unitsMappings.some((item) => {
