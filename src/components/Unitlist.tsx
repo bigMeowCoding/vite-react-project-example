@@ -536,7 +536,7 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
     ]
   );
 
-  useEffect(() => {
+  const initFormData = useCallback(() => {
     let ret = {} as IFormData;
     const weightDimensionMappings = props.weightDimensionMappings;
     const salesUnit = unitsMappings.find((item) => {
@@ -645,8 +645,10 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
     volumeDefaultUni, // 体积默认单位变化时
     dimensionDefaultUni, // 尺寸默认单位变化时
     props.weightDimensionMappings, // 接口数据变化时
-    props.sizeRequired, // 必填状态变化时
   ]);
+  useEffect(() => {
+    initFormData();
+  }, [initFormData]);
   // 监听 unitsMappings 变化，清空表单错误
   useEffect(() => {
     // 重置表单错误状态
