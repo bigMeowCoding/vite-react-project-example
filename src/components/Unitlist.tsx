@@ -8,10 +8,6 @@ import React, {
 } from 'react';
 import { Form, InputNumber, Select, Table } from 'antd';
 import './UnitList.less';
-const dealData = (arr?: any[], value?: number | null) => {
-  console.log('value', value, arr);
-  return arr?.filter((item) => item.enable || item.id == value);
-};
 interface IUnitMapItem {
   unitName: string;
   unitType: string;
@@ -354,81 +350,70 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
     },
     [sizeRequired, formData, getFormDataIndex]
   );
-  const _columnRender = (dataIndex: string) => {
-    const inputDataIndexList = [
-      columnConfig.maozhongDataIndex,
-      columnConfig.heightDataIndex,
-      columnConfig.netWightDataIndex,
-      columnConfig.lengthDataIndex,
-      columnConfig.widthDataIndex,
-      columnConfig.volumeDataIndex,
-    ];
-    const unitIdDataIndexList = [
-      columnConfig.unitIdDataIndex,
-      columnConfig.weightUnitIdDataIndex,
-      columnConfig.dimensionUnitIdDataIndex,
-      columnConfig.volumeUnitIdDataIndex,
-    ];
-    const renderFunction = (value: string, entity: any) => {
-      console.log(entity);
 
-      if (!inputDataIndexList.includes(dataIndex)) {
-        if (unitIdDataIndexList.includes(dataIndex)) {
-          const disabled = [
-            columnConfig.unitIdDataIndex,
-            columnConfig.weightUnitIdDataIndex,
-            columnConfig.dimensionUnitIdDataIndex,
-            columnConfig.volumeUnitIdDataIndex,
-          ].includes(dataIndex)
-            ? true
-            : false;
-          return (
-            <Form.Item
-              validateTrigger="submit"
-              name={getFormDataIndex(dataIndex, entity)}
-              rules={getFieldRule(dataIndex, entity)}
-            >
-              <span style={{ display: 'none' }}>
-                {JSON.stringify(getFormItemValue(dataIndex, entity))}
-              </span>
-              <Select
-                defaultValue={getFormItemValue(dataIndex, entity) ?? null}
-                value={getFormItemValue(dataIndex, entity)}
-                key={`${entity.rowType}-${dataIndex}`}
-                options={materielUnitList}
-                style={{ width: '120px' }}
-                placeholder="请选择"
-                allowClear={true}
-                disabled={props.disabled || !hasSalesUnit || disabled}
-                fieldNames={{
-                  label: 'name',
-                  value: 'id',
-                }}
-                showSearch
-                filterOption={(input, option) => {
-                  return (option?.name ?? '')
-                    .toLowerCase()
-                    .includes(input.toLowerCase());
-                }}
-                onChange={onChange(dataIndex, entity)}
-              ></Select>
-            </Form.Item>
-          );
-        } else {
-          return value;
-        }
-      }
+  const renderUnitSelect = useCallback(
+    (dataIndex: string, entity: any) => {
+      console.log('renderUnitSelect', dataIndex, entity);
+      const disabled = [
+        columnConfig.unitIdDataIndex,
+        columnConfig.weightUnitIdDataIndex,
+        columnConfig.dimensionUnitIdDataIndex,
+        columnConfig.volumeUnitIdDataIndex,
+      ].includes(dataIndex)
+        ? true
+        : false;
+      return (
+        <Form.Item
+          validateTrigger="submit"
+          name={getFormDataIndex(dataIndex, entity)}
+          rules={getFieldRule(dataIndex, entity)}
+        >
+          {/* <span style={{ display: 'none' }}>
+            {JSON.stringify(getFormItemValue(dataIndex, entity))}
+          </span> */}
+          <Select
+            defaultValue={getFormItemValue(dataIndex, entity) ?? null}
+            value={getFormItemValue(dataIndex, entity)}
+            key={`${entity.rowType}-${dataIndex}`}
+            options={materielUnitList}
+            style={{ width: '120px' }}
+            placeholder="请选择"
+            allowClear={true}
+            disabled={props.disabled || !hasSalesUnit || disabled}
+            fieldNames={{
+              label: 'name',
+              value: 'id',
+            }}
+            showSearch
+            filterOption={(input, option) => {
+              return (option?.name ?? '')
+                .toLowerCase()
+                .includes(input.toLowerCase());
+            }}
+            onChange={onChange(dataIndex, entity)}
+          ></Select>
+        </Form.Item>
+      );
+    },
+    [
+      materielUnitList,
+      props.disabled,
+      hasSalesUnit,
+      onChange,
+      getFieldRule,
+      getFormDataIndex,
+      getFormItemValue,
+    ]
+  );
 
+  const renderInputNumber = useCallback(
+    (dataIndex: string, entity: any) => {
       return (
         <Form.Item
           name={getFormDataIndex(dataIndex, entity)}
           validateTrigger="submit"
           rules={getFieldRule(dataIndex, entity)}
         >
-          <span style={{ display: 'none' }}>
-            {JSON.stringify(getFormItemValue(dataIndex, entity))}
-          </span>
-
           <InputNumber
             defaultValue={
               getFormItemValue(dataIndex, entity) as number | undefined
@@ -450,9 +435,16 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
           />
         </Form.Item>
       );
-    };
-    return renderFunction;
-  };
+    },
+    [
+      props.disabled,
+      hasSalesUnit,
+      onChange,
+      getFieldRule,
+      getFormDataIndex,
+      getFormItemValue,
+    ]
+  );
 
   useEffect(() => {
     let ret = {} as IFormData;
@@ -619,7 +611,9 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
             key: 'unitName',
             width: 120,
             fixed: 'left',
-            render: _columnRender('unitName'),
+            render: (value) => {
+              return value;
+            },
           },
           {
             title: makeThRender('单位'),
@@ -627,7 +621,9 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
             key: columnConfig.unitIdDataIndex,
             width: 100,
             fixed: 'left',
-            render: _columnRender(columnConfig.unitIdDataIndex),
+            render: (value, entity) => {
+              return renderUnitSelect(columnConfig.unitIdDataIndex, entity);
+            },
           },
           {
             title: '重量信息',
@@ -638,21 +634,36 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
                 title: makeThRender('单位'),
                 dataIndex: columnConfig.weightUnitIdDataIndex,
                 key: columnConfig.weightUnitIdDataIndex,
-                render: _columnRender(columnConfig.weightUnitIdDataIndex),
+                render: (value, entity) => {
+                  return renderUnitSelect(
+                    columnConfig.weightUnitIdDataIndex,
+                    entity
+                  );
+                },
               },
               {
                 title: makeThRender('毛重'),
                 width: 100,
                 dataIndex: columnConfig.maozhongDataIndex,
                 key: columnConfig.maozhongDataIndex,
-                render: _columnRender(columnConfig.maozhongDataIndex),
+                render: (value, entity) => {
+                  return renderInputNumber(
+                    columnConfig.maozhongDataIndex,
+                    entity
+                  );
+                },
               },
               {
                 title: makeThRender('净重'),
                 width: 100,
                 dataIndex: columnConfig.netWightDataIndex,
                 key: columnConfig.netWightDataIndex,
-                render: _columnRender(columnConfig.netWightDataIndex),
+                render: (value, entity) => {
+                  return renderInputNumber(
+                    columnConfig.netWightDataIndex,
+                    entity
+                  );
+                },
               },
             ],
           },
@@ -666,28 +677,45 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
                 dataIndex: columnConfig.dimensionUnitIdDataIndex,
                 key: columnConfig.dimensionUnitIdDataIndex,
                 // width: 200,
-                render: _columnRender(columnConfig.dimensionUnitIdDataIndex),
+                render: (value, entity) => {
+                  return renderUnitSelect(
+                    columnConfig.dimensionUnitIdDataIndex,
+                    entity
+                  );
+                },
               },
               {
                 title: makeThRender('长'),
                 dataIndex: columnConfig.lengthDataIndex,
                 key: columnConfig.lengthDataIndex,
                 width: 100,
-                render: _columnRender(columnConfig.lengthDataIndex),
+                render: (value, entity) => {
+                  return renderInputNumber(
+                    columnConfig.lengthDataIndex,
+                    entity
+                  );
+                },
               },
               {
                 title: makeThRender('宽'),
                 dataIndex: columnConfig.widthDataIndex,
                 key: columnConfig.widthDataIndex,
                 width: 100,
-                render: _columnRender(columnConfig.widthDataIndex),
+                render: (value, entity) => {
+                  return renderInputNumber(columnConfig.widthDataIndex, entity);
+                },
               },
               {
                 title: makeThRender('高'),
                 dataIndex: columnConfig.heightDataIndex,
                 key: columnConfig.heightDataIndex,
                 width: 100,
-                render: _columnRender(columnConfig.heightDataIndex),
+                render: (value, entity) => {
+                  return renderInputNumber(
+                    columnConfig.heightDataIndex,
+                    entity
+                  );
+                },
               },
             ],
           },
@@ -700,7 +728,12 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
                 title: makeThRender('单位'),
                 dataIndex: columnConfig.volumeUnitIdDataIndex,
                 key: columnConfig.volumeUnitIdDataIndex,
-                render: _columnRender(columnConfig.volumeUnitIdDataIndex),
+                render: (value, entity) => {
+                  return renderUnitSelect(
+                    columnConfig.volumeUnitIdDataIndex,
+                    entity
+                  );
+                },
                 width: 100,
               },
               {
@@ -708,7 +741,12 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
                 dataIndex: 'volume',
                 key: 'volume',
                 width: 100,
-                render: _columnRender('volume'),
+                render: (value, entity) => {
+                  return renderInputNumber(
+                    columnConfig.volumeDataIndex,
+                    entity
+                  );
+                },
               },
             ],
           },
