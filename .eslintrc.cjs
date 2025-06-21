@@ -3,7 +3,7 @@ module.exports = {
   env: {
     browser: true,
     es2021: true,
-    node: true
+    node: true,
   },
   extends: [
     'eslint:recommended',
@@ -13,52 +13,44 @@ module.exports = {
     'plugin:jsx-a11y/recommended',
     'plugin:import/recommended',
     'plugin:import/typescript',
-    'prettier'
+    'prettier',
   ],
   parser: '@typescript-eslint/parser',
   parserOptions: {
     ecmaVersion: 'latest',
     sourceType: 'module',
     ecmaFeatures: {
-      jsx: true
+      jsx: true,
     },
-    project: './tsconfig.json'
+    project: './tsconfig.json',
   },
   plugins: ['@typescript-eslint', 'react', 'jsx-a11y', 'import', 'prettier'],
   settings: {
     react: {
-      version: 'detect'
+      version: 'detect',
     },
     'import/resolver': {
       typescript: {
         alwaysTryTypes: true,
-        project: './tsconfig.json'
-      }
-    }
+        project: './tsconfig.json',
+      },
+    },
   },
   rules: {
     'prettier/prettier': 'error',
-    'import/order': [
-      'error',
-      {
-        groups: ['builtin', 'external', 'internal', 'parent', 'sibling', 'index', 'object', 'type'],
-        'newlines-between': 'always',
-        alphabetize: { order: 'asc', caseInsensitive: true }
-      }
-    ],
+    semi: 'error',
     'import/default': 'off',
     'react/prop-types': 'off',
     'react/react-in-jsx-scope': 'off',
     '@typescript-eslint/no-unused-vars': [
       'error',
-      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' }
+      { argsIgnorePattern: '^_', varsIgnorePattern: '^_' },
     ],
     '@typescript-eslint/no-explicit-any': 'off',
     '@typescript-eslint/ban-types': 'off',
     '@typescript-eslint/no-non-null-assertion': 'off',
     'jsx-a11y/anchor-is-valid': 'off',
     'no-const-assign': 'error',
-    'no-undef': 'error'
-  }
+    'no-undef': 'error',
+  },
 };
-    
