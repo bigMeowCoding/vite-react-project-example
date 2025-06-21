@@ -122,15 +122,75 @@ interface UnitListProps {
 
 const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
   const [form] = Form.useForm();
+  const sizeRequired = !!props.sizeRequired;
+  const [formData, setFormData] = useState<IFormData | null>(null);
+  const [showError, setShowError] = useState(false);
   const unitsMappings = useMemo(() => {
     return Array.isArray(props.unitsMappings) ? props.unitsMappings : [];
   }, [props.unitsMappings]);
   const materielUnitList = useMemo(() => {
     return Array.isArray(props.materielUnitList) ? props.materielUnitList : [];
   }, [props.materielUnitList]);
-  const sizeRequired = !!props.sizeRequired;
-  const [formData, setFormData] = useState<IFormData | null>(null);
-  const [showError, setShowError] = useState(false);
+  // 重量默认单位kg
+  const weightDefaultUni = useMemo(() => {
+    return materielUnitList.find((item) => {
+      return item.name === '千克';
+    });
+  }, [materielUnitList]);
+  // 体积默认单位立方厘米
+  const volumeDefaultUni = useMemo(() => {
+    return materielUnitList.find((item) => {
+      return item.name === 'cm³';
+    });
+  }, [materielUnitList]);
+  // 尺寸默认单位毫米
+  const dimensionDefaultUni = useMemo(() => {
+    return materielUnitList.find((item) => {
+      return item.name === '毫米';
+    });
+  }, [materielUnitList]);
+
+  const hasSalesUnit = useMemo(() => {
+    return unitsMappings.some((item) => {
+      return item.salesUnitFlag == 1;
+    });
+  }, [unitsMappings]);
+
+  const dataSource = useMemo<IWeightDimensionItem[]>(() => {
+    if (!formData) {
+      return [];
+    }
+
+    let salesData: Partial<IWeightDimensionItem> = null;
+    let miniPackData: Partial<IWeightDimensionItem> = null;
+
+    // 提取销售单位数据
+    if (formData['sales_unit_row-unitId']) {
+      salesData = { rowType: 'sales_unit_row' } as IWeightDimensionItem;
+      Object.keys(formData).forEach((key) => {
+        if (key.startsWith('sales_unit_row-')) {
+          const field = key.split('-')[1];
+          salesData[field] = formData[key];
+        }
+      });
+    }
+
+    // 提取最小包装单位数据
+    if (formData['min_package_row-unitId']) {
+      miniPackData = { rowType: 'min_package_row' } as IWeightDimensionItem;
+      Object.keys(formData).forEach((key) => {
+        if (key.startsWith('min_package_row-')) {
+          const field = key.split('-')[1];
+          miniPackData[field] = formData[key];
+        }
+      });
+    }
+
+    return [
+      ...(salesData ? [salesData as IWeightDimensionItem] : []),
+      ...(miniPackData ? [miniPackData as IWeightDimensionItem] : []),
+    ];
+  }, [formData]);
   const makeWeightDimensionMappings = useCallback((formData: IFormData) => {
     const ret: IWeightDimensionItem[] = [];
     if (formData['sales_unit_row-unitId']) {
@@ -194,51 +254,58 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
   const onChange = useCallback(
     (dataIndex: string, unitItem: any) => {
       return (value: string | number | null) => {
-        const index = getFormDataIndex(dataIndex, unitItem);
-        const newFormData = { ...(formData || {}) };
-        // 如果是数字类型的字段，确保存储为 number 或 null
-        if (
-          [
-            'grossWeight',
-            'netWeight',
-            'length',
-            'width',
-            'height',
-            'volume',
-          ].includes(dataIndex)
-        ) {
-          newFormData[index] = value === undefined ? null : value;
-          // 如果是长宽高变化，自动更新体积
-          if (['length', 'width', 'height'].includes(dataIndex)) {
-            const rowType = unitItem.rowType;
-            const length = newFormData[`${rowType}-length`];
-            const width = newFormData[`${rowType}-width`];
-            const height = newFormData[`${rowType}-height`];
-            const isInvalid = (val: number | null | undefined | string) => {
-              return val == null || val === '' || Number(val) <= 0;
-            };
+        setFormData((prevFormData) => {
+          if (!prevFormData) prevFormData = {} as IFormData;
+          const newFormData = { ...prevFormData };
+          const index = getFormDataIndex(dataIndex, unitItem);
+          // 如果是数字类型的字段，确保存储为 number 或 null
+          if (
+            [
+              'grossWeight',
+              'netWeight',
+              'length',
+              'width',
+              'height',
+              'volume',
+            ].includes(dataIndex)
+          ) {
+            newFormData[index] = value === undefined ? null : value;
+            // 如果是长宽高变化，自动更新体积
+            if (['length', 'width', 'height'].includes(dataIndex)) {
+              const rowType = unitItem.rowType;
+              const length = newFormData[`${rowType}-length`];
+              const width = newFormData[`${rowType}-width`];
+              const height = newFormData[`${rowType}-height`];
+              const isInvalid = (val: number | null | undefined | string) => {
+                return val == null || val === '' || Number(val) <= 0;
+              };
 
-            if (!isInvalid(width) && !isInvalid(height) && !isInvalid(length)) {
-              const volume = Number(length) * Number(width) * Number(height);
-              newFormData[`${rowType}-volume`] = Number(volume / 1000).toFixed(
-                2
-              );
-            } else {
-              newFormData[`${rowType}-volume`] = null; // 如果有任意一个值小于0，则体积置为null
+              if (
+                !isInvalid(width) &&
+                !isInvalid(height) &&
+                !isInvalid(length)
+              ) {
+                const volume = Number(length) * Number(width) * Number(height);
+                newFormData[`${rowType}-volume`] = Number(
+                  volume / 1000
+                ).toFixed(2);
+              } else {
+                newFormData[`${rowType}-volume`] = null; // 如果有任意一个值小于0，则体积置为null
+              }
+              console.log('体积计算', newFormData);
             }
-            console.log('体积计算', newFormData);
+          } else {
+            newFormData[index] = value;
           }
-        } else {
-          newFormData[index] = value;
-        }
 
-        setFormData(newFormData as IFormData);
-        const changeFunc = props.onChange;
-        changeFunc &&
-          changeFunc(makeWeightDimensionMappings(newFormData as IFormData));
+          const changeFunc = props.onChange;
+          changeFunc &&
+            changeFunc(makeWeightDimensionMappings(newFormData as IFormData));
+          return newFormData;
+        });
       };
     },
-    [formData, props.onChange, makeWeightDimensionMappings, getFormDataIndex]
+    [props.onChange, makeWeightDimensionMappings, getFormDataIndex]
   );
 
   const getFormItemValue = useCallback(
@@ -262,66 +329,6 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
     },
     [formData, getFormDataIndex]
   );
-  // 重量默认单位kg
-  const weightDefaultUni = useMemo(() => {
-    return materielUnitList.find((item) => {
-      return item.name === '千克';
-    });
-  }, [materielUnitList]);
-  // 体积默认单位立方厘米
-  const volumeDefaultUni = useMemo(() => {
-    return materielUnitList.find((item) => {
-      return item.name === 'cm³';
-    });
-  }, [materielUnitList]);
-  // 尺寸默认单位毫米
-  const dimensionDefaultUni = useMemo(() => {
-    return materielUnitList.find((item) => {
-      return item.name === '毫米';
-    });
-  }, [materielUnitList]);
-
-  const hasSalesUnit = useMemo(() => {
-    return unitsMappings.some((item) => {
-      return item.salesUnitFlag == 1;
-    });
-  }, [unitsMappings]);
-
-  const dataSource = useMemo<IWeightDimensionItem[]>(() => {
-    if (!formData) {
-      return [];
-    }
-
-    let salesData: Partial<IWeightDimensionItem> = null;
-    let miniPackData: Partial<IWeightDimensionItem> = null;
-
-    // 提取销售单位数据
-    if (formData['sales_unit_row-unitId']) {
-      salesData = { rowType: 'sales_unit_row' } as IWeightDimensionItem;
-      Object.keys(formData).forEach((key) => {
-        if (key.startsWith('sales_unit_row-')) {
-          const field = key.split('-')[1];
-          salesData[field] = formData[key];
-        }
-      });
-    }
-
-    // 提取最小包装单位数据
-    if (formData['min_package_row-unitId']) {
-      miniPackData = { rowType: 'min_package_row' } as IWeightDimensionItem;
-      Object.keys(formData).forEach((key) => {
-        if (key.startsWith('min_package_row-')) {
-          const field = key.split('-')[1];
-          miniPackData[field] = formData[key];
-        }
-      });
-    }
-
-    return [
-      ...(salesData ? [salesData as IWeightDimensionItem] : []),
-      ...(miniPackData ? [miniPackData as IWeightDimensionItem] : []),
-    ];
-  }, [formData]);
   const getFieldRule = useCallback(
     (dataIndex: string, entity: any) => {
       const ret = [
@@ -564,11 +571,12 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
     }
     setFormData(ret as IFormData);
   }, [
-    unitsMappings,
-    weightDefaultUni,
-    volumeDefaultUni,
-    dimensionDefaultUni,
-    props.weightDimensionMappings,
+    unitsMappings, // 单位映射数据变化时重新初始化
+    weightDefaultUni, // 重量默认单位变化时
+    volumeDefaultUni, // 体积默认单位变化时
+    dimensionDefaultUni, // 尺寸默认单位变化时
+    props.weightDimensionMappings, // 接口数据变化时
+    props.sizeRequired, // 必填状态变化时
   ]);
   // 监听 unitsMappings 变化，清空表单错误
   useEffect(() => {
