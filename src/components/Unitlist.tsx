@@ -329,9 +329,17 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
     },
     [formData, getFormDataIndex]
   );
-  const getFieldRule = useCallback(
+
+  const formValueIsEmpty = useCallback(
+    (fieldValue: string | number | null | undefined) => {
+      return fieldValue == null || fieldValue === '';
+    },
+    []
+  );
+
+  const createNumberValidation = useCallback(
     (dataIndex: string, entity: any) => {
-      const ret = [
+      return [
         {
           required: true,
           message: ' ',
@@ -339,26 +347,18 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
             const index = getFormDataIndex(dataIndex, entity);
             const fieldValue = formData?.[index]; // 如果是必填，不能输入值为空
             // 如果值不是空，就必须是大于0的数字
-            const isEmpty = fieldValue == null || fieldValue === '';
+
             // 1. 必填校验
-            if (sizeRequired && isEmpty) {
-              return Promise.reject(false);
-            }
-            if (formData?.[index] == null || formData?.[index] === '') {
+            if (sizeRequired && formValueIsEmpty(fieldValue)) {
               return Promise.reject(false);
             }
 
             // 2. 如果字段有值，则进行数值校验,体积字段不校验
-            if (!isEmpty && dataIndex !== 'volume') {
+            if (!formValueIsEmpty(fieldValue)) {
               const numValue = Number(fieldValue);
 
               // 检查是否为有效数字
-              if (Number.isNaN(numValue)) {
-                return Promise.reject(false);
-              }
-
-              // 检查是否大于0
-              if (numValue <= 0) {
+              if (Number.isNaN(numValue) || numValue <= 0) {
                 return Promise.reject(false);
               }
             }
@@ -366,10 +366,79 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
           },
         },
       ];
-
-      return ret;
     },
-    [sizeRequired, formData, getFormDataIndex]
+    [sizeRequired, formData, getFormDataIndex, formValueIsEmpty]
+  );
+
+  const createVolumeValidation = useCallback(
+    (dataIndex: string, entity: any) => {
+      return [
+        {
+          required: true,
+          message: ' ',
+          validator: () => {
+            const index = getFormDataIndex(dataIndex, entity);
+            const fieldValue = formData?.[index];
+            if (formValueIsEmpty(fieldValue)) {
+              return Promise.reject(false);
+            }
+            return Promise.resolve(true);
+          },
+        },
+      ];
+    },
+    [formData, getFormDataIndex, formValueIsEmpty]
+  );
+
+  const createUnitValidation = useCallback(
+    (dataIndex: string, entity: any) => {
+      return [
+        {
+          required: true,
+          message: ' ',
+          validator: () => {
+            const index = getFormDataIndex(dataIndex, entity);
+            const fieldValue = formData?.[index];
+            if (formValueIsEmpty(fieldValue)) {
+              return Promise.reject(false);
+            }
+            return Promise.resolve(true);
+          },
+        },
+      ];
+    },
+    [formData, getFormDataIndex, formValueIsEmpty]
+  );
+
+  const getFieldRule = useCallback(
+    (dataIndex: string, entity: any) => {
+      // 根据字段类型返回不同验证规则
+      if (
+        ['grossWeight', 'netWeight', 'length', 'width', 'height'].includes(
+          dataIndex
+        )
+      ) {
+        return createNumberValidation(dataIndex, entity);
+      }
+
+      if (dataIndex === 'volume') {
+        return createVolumeValidation(dataIndex, entity);
+      }
+
+      if (
+        [
+          'unitId',
+          'weight_unitId',
+          'dimension_unitId',
+          'volume_unitId',
+        ].includes(dataIndex)
+      ) {
+        return createUnitValidation(dataIndex, entity);
+      }
+
+      return [];
+    },
+    [createNumberValidation, createVolumeValidation, createUnitValidation]
   );
 
   const renderUnitSelect = useCallback(
