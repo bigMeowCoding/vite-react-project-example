@@ -22,8 +22,8 @@ import { ValidationFactory } from './validation';
 // 导入自定义 Hook
 import { useUnitListForm } from './hooks/useUnitListForm';
 
-// 导入表格列配置
-import { createTableColumns } from './tableColumns';
+// 导入表格列配置 Hook
+import { useTableColumns } from './tableColumns';
 
 const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
   // 处理 props
@@ -124,28 +124,17 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
     validateForm,
   }));
 
-  // 创建表格列配置 - 使用 useMemo 优化性能
-  const columns = useMemo(() => {
-    return createTableColumns({
-      materielUnitList,
-      disabled: props.disabled,
-      hasSalesUnit,
-      sizeRequired,
-      getFormDataIndex,
-      getFormItemValue: getFormItemValueWithData,
-      getFieldRule,
-      onChange: handleFieldChange,
-    });
-  }, [
+  // 使用表格列配置 Hook
+  const columns = useTableColumns({
     materielUnitList,
-    props.disabled,
+    disabled: props.disabled,
     hasSalesUnit,
     sizeRequired,
     getFormDataIndex,
-    getFormItemValueWithData,
+    getFormItemValue: getFormItemValueWithData,
     getFieldRule,
-    handleFieldChange,
-  ]);
+    onChange: handleFieldChange,
+  });
 
   return (
     <Form form={form}>

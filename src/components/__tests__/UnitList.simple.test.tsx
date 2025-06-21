@@ -1,7 +1,7 @@
 import React from 'react';
 import { render, screen } from '@testing-library/react';
 import { describe, it, expect, vi } from 'vitest';
-import UnitList, { UnitListRef } from '../Unitlist';
+import UnitList, { UnitListRef } from '../UnitList/index';
 
 // Mock data
 const mockUnitsMappings = [
