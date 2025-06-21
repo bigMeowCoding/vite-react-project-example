@@ -1,6 +1,6 @@
 import React, { useRef } from 'react';
 import { Button, Form, Space } from 'antd';
-import UnitList from './components/Unitlist';
+import UnitList, { UnitListRef } from './components/UnitList';
 
 // 模拟物料单位数据
 const mockMaterielUnitList = [

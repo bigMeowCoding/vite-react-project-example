@@ -8,22 +8,22 @@ import {
   UnitListRef,
   IWeightDimensionItem,
   DefaultUnits,
-} from './UnitList/types';
+} from './types';
 
 // 导入常量
-import { DEFAULT_UNIT_NAMES } from './UnitList/constants';
+import { DEFAULT_UNIT_NAMES } from './constants';
 
 // 导入工具函数
-import { getFormDataIndex, getFormItemValue } from './UnitList/utils';
+import { getFormDataIndex, getFormItemValue } from './utils';
 
 // 导入验证工厂
-import { ValidationFactory } from './UnitList/validation';
+import { ValidationFactory } from './validation';
 
 // 导入自定义 Hook
-import { useUnitListForm } from './UnitList/hooks/useUnitListForm';
+import { useUnitListForm } from './hooks/useUnitListForm';
 
 // 导入表格列配置
-import { createTableColumns } from './UnitList/tableColumns';
+import { createTableColumns } from './tableColumns';
 
 const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
   // 处理 props
@@ -124,18 +124,28 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
     validateForm,
   }));
 
-  // 创建表格列配置
-  const columns = createTableColumns({
+  // 创建表格列配置 - 使用 useMemo 优化性能
+  const columns = useMemo(() => {
+    return createTableColumns({
+      materielUnitList,
+      disabled: props.disabled,
+      hasSalesUnit,
+      sizeRequired,
+      getFormDataIndex,
+      getFormItemValue: getFormItemValueWithData,
+      getFieldRule,
+      onChange: handleFieldChange,
+    });
+  }, [
     materielUnitList,
-    disabled: props.disabled,
+    props.disabled,
     hasSalesUnit,
     sizeRequired,
-    formData,
     getFormDataIndex,
-    getFormItemValue: getFormItemValueWithData,
+    getFormItemValueWithData,
     getFieldRule,
-    onChange: handleFieldChange,
-  });
+    handleFieldChange,
+  ]);
 
   return (
     <Form form={form}>

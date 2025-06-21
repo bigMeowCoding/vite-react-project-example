@@ -8,7 +8,6 @@ interface TableColumnsProps {
   disabled?: boolean;
   hasSalesUnit: boolean;
   sizeRequired: boolean;
-  formData: any;
   getFormDataIndex: (dataIndex: string, entity: any) => string;
   getFormItemValue: (dataIndex: string, entity: any) => any;
   getFieldRule: (dataIndex: string, entity: any) => any[];
