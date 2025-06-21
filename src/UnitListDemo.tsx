@@ -4,12 +4,14 @@ import UnitList from './components/Unitlist';
 
 // 模拟物料单位数据
 const mockMaterielUnitList = [
-  { id: 'kg', name: '千克' },
-  { id: 'g', name: '克' },
-  { id: 'mm', name: '毫米' },
-  { id: 'cm', name: '厘米' },
-  { id: 'cm3', name: 'cm³' },
-  { id: 'm3', name: 'm³' },
+  { id: 1, name: '千克' },
+  { id: 2, name: '克' },
+  { id: 3, name: '毫米' },
+  { id: 4, name: '厘米' },
+  { id: 5, name: 'cm³' },
+  { id: 6, name: 'm³' },
+  { id: 7, name: '箱' },
+  { id: 8, name: '件' },
 ];
 
 // 模拟单位映射数据
@@ -20,7 +22,7 @@ const mockUnitsMappings = [
     salesUnitFlag: 1,
     purchaseUnitFlag: 0,
     stockUnitFlag: 0,
-    unitId: 'box',
+    unitId: 7,
   },
   {
     unitName: '件',
@@ -28,7 +30,7 @@ const mockUnitsMappings = [
     salesUnitFlag: 0,
     purchaseUnitFlag: 1,
     stockUnitFlag: 1,
-    unitId: 'piece',
+    unitId: 8,
   },
 ];
 
@@ -37,34 +39,34 @@ const mockWeightDimensionMappings = [
   {
     rowType: 'sales_unit_row',
     unitType: 'unit_weight',
-    rowTypeUnitId: 'box',
+    rowTypeUnitId: 'sales_unit_1',
     grossWeight: 10.5,
-    netWeight: 10.0,
-    unitId: 'kg',
+    netWeight: 8.2,
+    unitId: 1,
   },
   {
     rowType: 'sales_unit_row',
     unitType: 'unit_dimension',
-    rowTypeUnitId: 'box',
-    length: 50,
-    width: 40,
+    rowTypeUnitId: 'sales_unit_1',
+    length: 100,
+    width: 50,
     height: 30,
-    unitId: 'cm',
+    unitId: 4,
   },
   {
     rowType: 'sales_unit_row',
     unitType: 'unit_volume',
-    rowTypeUnitId: 'box',
-    volume: 60000,
-    unitId: 'cm3',
+    rowTypeUnitId: 'sales_unit_1',
+    volume: 150,
+    unitId: 5,
   },
   {
     rowType: 'min_package_row',
     unitType: 'unit_weight',
-    rowTypeUnitId: 'piece',
-    grossWeight: 0.5,
-    netWeight: 0.45,
-    unitId: 'kg',
+    rowTypeUnitId: 'mini_pack_1',
+    grossWeight: 5.2,
+    netWeight: 4.1,
+    unitId: 1,
   },
 ];
 

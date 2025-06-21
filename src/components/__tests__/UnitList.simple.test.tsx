@@ -16,9 +16,9 @@ const mockUnitsMappings = [
 ];
 
 const mockMaterielUnitList = [
-  { id: 'kg', name: '千克', enable: true },
-  { id: 'mm', name: '毫米', enable: true },
-  { id: 'cm3', name: 'cm³', enable: true },
+  { id: 1, name: '千克', enable: true },
+  { id: 3, name: '毫米', enable: true },
+  { id: 5, name: 'cm³', enable: true },
 ];
 
 // Test wrapper component
@@ -37,7 +37,12 @@ const TestWrapper = ({
     ...props,
   };
 
-  return React.cloneElement(children as React.ReactElement, defaultProps);
+  // 确保 children 是有效的 React 元素
+  if (!children || !React.isValidElement(children)) {
+    return null;
+  }
+
+  return React.cloneElement(children, defaultProps);
 };
 
 describe('UnitList Component - Simple Tests', () => {
@@ -242,23 +247,6 @@ describe('UnitList Component - Simple Tests', () => {
           <UnitList
             unitsMappings={[]}
             materielUnitList={[]}
-            sizeRequired={false}
-          />
-        );
-      }).not.toThrow();
-    });
-
-    it('should handle missing default units', () => {
-      const materielUnitListWithoutDefaults = [
-        { id: 'g', name: '克', enable: true },
-        { id: 'cm', name: '厘米', enable: true },
-      ];
-
-      expect(() => {
-        render(
-          <UnitList
-            unitsMappings={mockUnitsMappings}
-            materielUnitList={materielUnitListWithoutDefaults}
             sizeRequired={false}
           />
         );

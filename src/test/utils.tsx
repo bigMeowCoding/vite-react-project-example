@@ -26,12 +26,12 @@ export const createMockUnitsMappings = (overrides = {}) => [
 ];
 
 export const createMockMaterielUnitList = (overrides = {}) => [
-  { id: 'kg', name: '千克', enable: true, ...overrides },
-  { id: 'g', name: '克', enable: true, ...overrides },
-  { id: 'mm', name: '毫米', enable: true, ...overrides },
-  { id: 'cm', name: '厘米', enable: true, ...overrides },
-  { id: 'cm3', name: 'cm³', enable: true, ...overrides },
-  { id: 'm3', name: 'm³', enable: true, ...overrides },
+  { id: 1, name: '千克', enable: true, ...overrides },
+  { id: 2, name: '克', enable: true, ...overrides },
+  { id: 3, name: '毫米', enable: true, ...overrides },
+  { id: 4, name: '厘米', enable: true, ...overrides },
+  { id: 5, name: 'cm³', enable: true, ...overrides },
+  { id: 6, name: 'm³', enable: true, ...overrides },
 ];
 
 export const createMockWeightDimensionMappings = (overrides = {}) => [
@@ -40,8 +40,8 @@ export const createMockWeightDimensionMappings = (overrides = {}) => [
     unitType: 'unit_weight',
     rowTypeUnitId: 'sales_unit_1',
     grossWeight: 10.5,
-    netWeight: 9.8,
-    unitId: 'kg',
+    netWeight: 8.2,
+    unitId: 1,
     unitName: '销售单位',
     unitType: 'unit_sales',
     salesUnitFlag: 1,

@@ -3,12 +3,14 @@ import React, {
   forwardRef,
   useImperativeHandle,
   useEffect,
+  useCallback,
   useState,
 } from 'react';
 import { Form, InputNumber, Select, Table } from 'antd';
 import './UnitList.less';
-const dealData = (arr?: any[], value?: string | null) => {
-  return arr?.filter((item) => item.enable || item.code === value);
+const dealData = (arr?: any[], value?: number | null) => {
+  console.log('value', value, arr);
+  return arr?.filter((item) => item.enable || item.id == value);
 };
 interface IUnitMapItem {
   unitName: string;
@@ -51,7 +53,7 @@ interface IWeightDimensionItemBase {
   rowTypeUnitId: string | null; // 同步unitId
   rowType: IRowType; //   "min_package_row", 用料单位 "sales_unit_row",  // 销售单位
   unitType: IUnitType;
-  unitId: string | null;
+  unitId: number | null;
 }
 // 组合接口（使用交叉类型）
 type IWeightDimensionItem =
@@ -73,9 +75,9 @@ interface IFormData {
   'min_package_row-width': number | null;
   'min_package_row-height': number | null;
   'min_package_row-volume': number | null;
-  'min_package_row-weight_unitId': string | null;
-  'min_package_row-dimension_unitId': string | null;
-  'min_package_row-volume_unitId': string | null;
+  'min_package_row-weight_unitId': number | null;
+  'min_package_row-dimension_unitId': number | null;
+  'min_package_row-volume_unitId': number | null;
   'min_package_row-unitId': string | null;
   'min_package_row-unitName': string | null;
   'sales_unit_row-grossWeight': number | null;
@@ -85,9 +87,9 @@ interface IFormData {
   'sales_unit_row-height': number | null;
   'sales_unit_row-volume': number | null;
   'sales_unit_row-unitName': string | null;
-  'sales_unit_row-weight_unitId': string | null;
-  'sales_unit_row-dimension_unitId': string | null;
-  'sales_unit_row-volume_unitId': string | null;
+  'sales_unit_row-weight_unitId': number | null;
+  'sales_unit_row-dimension_unitId': number | null;
+  'sales_unit_row-volume_unitId': number | null;
   'sales_unit_row-unitId': string | null;
 }
 const columnConfig = {
@@ -310,6 +312,48 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
     }
     return ret;
   }, [formData]);
+  const getFieldRule = useCallback(
+    (dataIndex: string, entity: any) => {
+      const ret = [
+        {
+          required: true,
+          message: ' ',
+          validator: () => {
+            const index = getFormDataIndex(dataIndex, entity);
+            const fieldValue = formData?.[index]; // 如果是必填，不能输入值为空
+            // 如果值不是空，就必须是大于0的数字
+            const isEmpty = fieldValue == null || fieldValue === '';
+            // 1. 必填校验
+            if (sizeRequired && isEmpty) {
+              return Promise.reject(false);
+            }
+            if (formData?.[index] == null || formData?.[index] === '') {
+              return Promise.reject(false);
+            }
+
+            // 2. 如果字段有值，则进行数值校验,体积字段不校验
+            if (!isEmpty && dataIndex !== 'volume') {
+              const numValue = Number(fieldValue);
+
+              // 检查是否为有效数字
+              if (Number.isNaN(numValue)) {
+                return Promise.reject(false);
+              }
+
+              // 检查是否大于0
+              if (numValue <= 0) {
+                return Promise.reject(false);
+              }
+            }
+            return Promise.resolve(true);
+          },
+        },
+      ];
+
+      return ret;
+    },
+    [sizeRequired, formData, getFormDataIndex]
+  );
   const _columnRender = (dataIndex: string) => {
     const inputDataIndexList = [
       columnConfig.maozhongDataIndex,
@@ -326,6 +370,8 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
       columnConfig.volumeUnitIdDataIndex,
     ];
     const renderFunction = (value: string, entity: any) => {
+      console.log(entity);
+
       if (!inputDataIndexList.includes(dataIndex)) {
         if (unitIdDataIndexList.includes(dataIndex)) {
           const disabled = [
@@ -340,22 +386,7 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
             <Form.Item
               validateTrigger="submit"
               name={getFormDataIndex(dataIndex, entity)}
-              rules={[
-                {
-                  required: true,
-                  message: ' ',
-                  validator: () => {
-                    if (!sizeRequired) {
-                      return Promise.resolve(true);
-                    }
-                    const index = getFormDataIndex(dataIndex, entity);
-                    if (formData?.[index] == null || formData?.[index] === '') {
-                      return Promise.reject(false);
-                    }
-                    return Promise.resolve(true);
-                  },
-                },
-              ]}
+              rules={getFieldRule(dataIndex, entity)}
             >
               <span style={{ display: 'none' }}>
                 {JSON.stringify(getFormItemValue(dataIndex, entity))}
@@ -364,7 +395,7 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
                 defaultValue={getFormItemValue(dataIndex, entity) ?? null}
                 value={getFormItemValue(dataIndex, entity)}
                 key={`${entity.rowType}-${dataIndex}`}
-                options={dealData(materielUnitList, entity.unitId)}
+                options={materielUnitList}
                 style={{ width: '120px' }}
                 placeholder="请选择"
                 allowClear={true}
@@ -392,39 +423,7 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
         <Form.Item
           name={getFormDataIndex(dataIndex, entity)}
           validateTrigger="submit"
-          rules={[
-            {
-              required: true,
-              message: ' ',
-              validator: (_) => {
-                const index = getFormDataIndex(dataIndex, entity);
-                const fieldValue = formData?.[index]; // 如果是必填，不能输入值为空
-                // 如果值不是空，就必须是大于0的数字
-                const isEmpty = fieldValue == null || fieldValue === '';
-
-                // 1. 必填校验
-                if (sizeRequired && isEmpty) {
-                  return Promise.reject(false);
-                }
-
-                // 2. 如果字段有值，则进行数值校验,体积字段不校验
-                if (!isEmpty && dataIndex !== 'volume') {
-                  const numValue = Number(fieldValue);
-
-                  // 检查是否为有效数字
-                  if (Number.isNaN(numValue)) {
-                    return Promise.reject(false);
-                  }
-
-                  // 检查是否大于0
-                  if (numValue <= 0) {
-                    return Promise.reject(false);
-                  }
-                }
-                return Promise.resolve(true);
-              },
-            },
-          ]}
+          rules={getFieldRule(dataIndex, entity)}
         >
           <span style={{ display: 'none' }}>
             {JSON.stringify(getFormItemValue(dataIndex, entity))}
