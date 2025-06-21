@@ -131,52 +131,7 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
   const sizeRequired = !!props.sizeRequired;
   const [formData, setFormData] = useState<IFormData | null>(null);
   const [showError, setShowError] = useState(false);
-
-  const onChange = (dataIndex: string, unitItem: any) => {
-    return (value: string | number | null) => {
-      const index = getFormDataIndex(dataIndex, unitItem);
-      const newFormData = { ...(formData || {}) };
-      // 如果是数字类型的字段，确保存储为 number 或 null
-      if (
-        [
-          'grossWeight',
-          'netWeight',
-          'length',
-          'width',
-          'height',
-          'volume',
-        ].includes(dataIndex)
-      ) {
-        newFormData[index] = value === undefined ? null : value;
-      } else {
-        newFormData[index] = value;
-      }
-
-      // 如果是长宽高变化，自动更新体积
-      if (['length', 'width', 'height'].includes(dataIndex)) {
-        const rowType = unitItem.rowType;
-        const length = newFormData[`${rowType}-length`];
-        const width = newFormData[`${rowType}-width`];
-        const height = newFormData[`${rowType}-height`];
-        const isInvalid = (val: number | null | undefined | string) => {
-          return val == null || val === '' || Number(val) <= 0;
-        };
-
-        if (!isInvalid(width) && !isInvalid(height) && !isInvalid(length)) {
-          const volume = Number(length) * Number(width) * Number(height);
-          newFormData[`${rowType}-volume`] = Number(volume / 1000).toFixed(2);
-        } else {
-          newFormData[`${rowType}-volume`] = null; // 如果有任意一个值小于0，则体积置为null
-        }
-        console.log('体积计算', newFormData);
-      }
-      setFormData(newFormData as IFormData);
-      const changeFunc = props.onChange;
-      changeFunc &&
-        changeFunc(makeWeightDimensionMappings(newFormData as IFormData));
-    };
-  };
-  const makeWeightDimensionMappings = (formData: IFormData) => {
+  const makeWeightDimensionMappings = useCallback((formData: IFormData) => {
     const ret: IWeightDimensionItem[] = [];
     if (formData['sales_unit_row-unitId']) {
       ret.push({
@@ -231,25 +186,82 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
       });
     }
     return ret;
-  };
-  const getFormItemValue = (dataIndex: string, entity: any) => {
-    const index = getFormDataIndex(dataIndex, entity);
-    const value = formData?.[index];
-    // 如果是数字类型的字段，确保返回 number 或 undefined
-    if (
-      [
-        'grossWeight',
-        'netWeight',
-        'length',
-        'width',
-        'height',
-        'volume',
-      ].includes(dataIndex)
-    ) {
-      return value === null ? undefined : value;
-    }
-    return value;
-  };
+  }, []);
+  const getFormDataIndex = useCallback((dataIndex: string, entity: any) => {
+    const rowType = entity.rowType;
+    return `${rowType}-${dataIndex}`;
+  }, []);
+  const onChange = useCallback(
+    (dataIndex: string, unitItem: any) => {
+      return (value: string | number | null) => {
+        const index = getFormDataIndex(dataIndex, unitItem);
+        const newFormData = { ...(formData || {}) };
+        // 如果是数字类型的字段，确保存储为 number 或 null
+        if (
+          [
+            'grossWeight',
+            'netWeight',
+            'length',
+            'width',
+            'height',
+            'volume',
+          ].includes(dataIndex)
+        ) {
+          newFormData[index] = value === undefined ? null : value;
+          // 如果是长宽高变化，自动更新体积
+          if (['length', 'width', 'height'].includes(dataIndex)) {
+            const rowType = unitItem.rowType;
+            const length = newFormData[`${rowType}-length`];
+            const width = newFormData[`${rowType}-width`];
+            const height = newFormData[`${rowType}-height`];
+            const isInvalid = (val: number | null | undefined | string) => {
+              return val == null || val === '' || Number(val) <= 0;
+            };
+
+            if (!isInvalid(width) && !isInvalid(height) && !isInvalid(length)) {
+              const volume = Number(length) * Number(width) * Number(height);
+              newFormData[`${rowType}-volume`] = Number(volume / 1000).toFixed(
+                2
+              );
+            } else {
+              newFormData[`${rowType}-volume`] = null; // 如果有任意一个值小于0，则体积置为null
+            }
+            console.log('体积计算', newFormData);
+          }
+        } else {
+          newFormData[index] = value;
+        }
+
+        setFormData(newFormData as IFormData);
+        const changeFunc = props.onChange;
+        changeFunc &&
+          changeFunc(makeWeightDimensionMappings(newFormData as IFormData));
+      };
+    },
+    [formData, props.onChange, makeWeightDimensionMappings, getFormDataIndex]
+  );
+
+  const getFormItemValue = useCallback(
+    (dataIndex: string, entity: any) => {
+      const index = getFormDataIndex(dataIndex, entity);
+      const value = formData?.[index];
+      // 如果是数字类型的字段，确保返回 number 或 undefined
+      if (
+        [
+          'grossWeight',
+          'netWeight',
+          'length',
+          'width',
+          'height',
+          'volume',
+        ].includes(dataIndex)
+      ) {
+        return value === null ? undefined : value;
+      }
+      return value;
+    },
+    [formData, getFormDataIndex]
+  );
   // 重量默认单位kg
   const weightDefaultUni = useMemo(() => {
     return materielUnitList.find((item) => {
@@ -268,11 +280,6 @@ const UnitList = forwardRef<UnitListRef, UnitListProps>((props, ref) => {
       return item.name === '毫米';
     });
   }, [materielUnitList]);
-
-  const getFormDataIndex = (dataIndex: string, entity: any) => {
-    const rowType = entity.rowType;
-    return `${rowType}-${dataIndex}`;
-  };
 
   const hasSalesUnit = useMemo(() => {
     return unitsMappings.some((item) => {
