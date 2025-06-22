@@ -1,6 +1,6 @@
 import { ValidationRule } from './types';
 import { VALIDATION } from './constants';
-import { getFormDataIndex, isValueEmpty, isNumberField } from './utils';
+import { getFormDataIndex, isValueEmpty } from './utils';
 
 // 验证工厂类
 export class ValidationFactory {
