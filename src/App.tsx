@@ -1,10 +1,10 @@
 import React from 'react';
-import UnitListDemo from './UnitListDemo';
+import Channel from './components/Channel';
 
 const App: React.FC = () => {
   return (
     <div className="App">
-      <UnitListDemo />
+      <Channel />
     </div>
   );
 };
